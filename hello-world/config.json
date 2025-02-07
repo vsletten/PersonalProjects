@@ -1,0 +1,7 @@
+{
+    "topic": "Youth soccer",
+    "chroma_collection": "youth_soccer",
+    "pdf_base_dir": "/mnt/data/vsletten/source_docs/",
+    "chroma_base_dir": "/mnt/data/vsletten/rag_dbs/chroma_db"
+}
+  
