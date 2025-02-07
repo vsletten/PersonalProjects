@@ -3,7 +3,7 @@ import json
 from dotenv import load_dotenv
 import streamlit as st
 
-from langchain.llms import Anthropic
+from langchain_anthropic import AnthropicLLM
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.agents import AgentType, initialize_agent, Tool
 from langchain.utilities import SerpAPIWrapper
@@ -22,7 +22,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 SERP_API_KEY = os.getenv("SERP_API_KEY")
 
-llm = Anthropic(model="claude-2", anthropic_api_key=ANTHROPIC_API_KEY, temperature=0.0)
+llm = AnthropicLLM(model="claude-3-5-sonnet-20240620", anthropic_api_key=ANTHROPIC_API_KEY, temperature=0.0)
 
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
