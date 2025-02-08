@@ -10,46 +10,50 @@ from langchain_community.utilities import SerpAPIWrapper
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
-def read_config():
-    with open("config.json", "r") as f:
-        config = json.load(f)
-    
-    return config
+load_dotenv()
+with open("config.json", "r") as f:
+    config = json.load(f)
 
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+persist_directory = os.path.join(config["chroma_base_dir"], config["chroma_collection"])
+
+# Initialize the LLM
+llm = ChatAnthropic(
+    model="claude-3-5-sonnet-20240620", 
+    anthropic_api_key=ANTHROPIC_API_KEY, 
+    temperature=0.0)
+
+# Initialize the embeddings
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+
+# Initialize the vector store
+vector_store = Chroma(
+    collection_name=config["chroma_collection"],
+    embedding_function=embeddings,
+    persist_directory=persist_directory
+)
+
+# Initialize the RAG QA chain
+rag_qa = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=vector_store.as_retriever()
+)
+
+# Initialize the SerpAPIWrapper for web search
+serp_api_wrapper = SerpAPIWrapper(serpapi_api_key=os.getenv("SERP_API_KEY"))
+
+# Define the RAG tool function
 def use_rag_tool(query: str) -> str:
     return rag_qa.run(query)
 
-
+# Define the web search tool function   
 def use_serp_tool(query: str) -> str:
-    serp_api_wrapper = SerpAPIWrapper(serpapi_api_key=os.getenv("SERP_API_KEY"))
     return serp_api_wrapper.run(query)
 
 if __name__ == "__main__":
-    load_dotenv()
-    config = read_config()
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-    llm = ChatAnthropic(
-        model="claude-3-5-sonnet-20240620", 
-        anthropic_api_key=ANTHROPIC_API_KEY, 
-        temperature=0.0)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-
-    persist_directory = os.path.join(config["chroma_base_dir"], config["chroma_collection"])
-    vector_store = Chroma(
-        collection_name=config["chroma_collection"],
-        embedding_function=embeddings,
-        persist_directory=persist_directory
-    )
-
-    rag_qa = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vector_store.as_retriever()
-    )
-
+    # Define the tools
     tools = [
         Tool(
             name="RAGTool",
@@ -63,21 +67,23 @@ if __name__ == "__main__":
         )
     ]
 
+    # Define the system prompt
     SYSTEM_PROMPT = f"""
-    You are an AI assistant with specialized knowledge of the following topics:
-    {config["topic"]}.
+        You are an AI assistant with specialized knowledge of the following topics:
+        {config["topic"]}.
 
-    - If the user's question is relevant to these topics, call the RAGTool.
-    - If the question is outside these topics, or if you need additional external info,
-    call the WebSearchTool.
-    - In most cases, you should use both tools, and weigh relevance of each tool's response.
-    - If the RAGTool provides a relevant answer, you should consider its response to be authoritative.
-    - Provide accurate answers, preferring concise answers unless the user asks for more detail.
-    - provide your response in markdown format.
+        - If the user's question is relevant to these topics, call the RAGTool.
+        - If the question is outside these topics, or if you need additional external info,
+        call the WebSearchTool.
+        - In most cases, you should use both tools, and weigh relevance of each tool's response.
+        - If the RAGTool provides a relevant answer, you should consider its response to be authoritative.
+        - Provide accurate answers, preferring concise answers unless the user asks for more detail.
+        - provide your response in markdown format.
     """
     
     print(SYSTEM_PROMPT)
 
+    # Initialize the agent
     agent_chain = initialize_agent(
         tools,
         llm,
@@ -86,6 +92,7 @@ if __name__ == "__main__":
         system_message=SYSTEM_PROMPT
     )
 
+    # Initialize the Streamlit app
     st.title("Anthropic Claude Q&A Agent (RAG + Web Search)")
 
     if "messages" not in st.session_state:

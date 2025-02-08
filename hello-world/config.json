@@ -1,7 +1,11 @@
 {
+    "LOG_LEVEL": 20,
     "topic": "Youth soccer",
     "chroma_collection": "youth_soccer",
-    "pdf_base_dir": "/mnt/data/vsletten/source_docs/",
-    "chroma_base_dir": "/mnt/data/vsletten/rag_dbs/chroma_db"
+    "pdf_base_dir": "/mnt/data/vsletten/source_docs/pdf",
+    "html_base_dir": "/mnt/data/vsletten/source_docs/html",
+    "chroma_base_dir": "/mnt/data/vsletten/rag_dbs/chroma_db",
+    "CHUNK_SIZE": 1000,
+    "CHUNK_OVERLAP": 100
 }
   
