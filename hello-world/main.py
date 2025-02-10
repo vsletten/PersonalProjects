@@ -2,6 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 import streamlit as st
+import config
 
 from langchain_anthropic import ChatAnthropic
 from langchain_community.embeddings import OpenAIEmbeddings
@@ -11,8 +12,7 @@ from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
 load_dotenv()
-with open("config.json", "r") as f:
-    config = json.load(f)
+config = config.read_config()
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -54,15 +54,17 @@ def use_serp_tool(query: str) -> str:
 
 if __name__ == "__main__":
     # Define the tools
+    print(config["topic_name"])
+    print(config["topic_scope"])
     tools = [
         Tool(
             name="RAGTool",
-            description=f"Use this tool to answer questions using the authoritative documents in the vector store about {config['topic']}. This is the primary tool you should use.",
+            description=f"Use this tool to answer questions using the authoritative documents in the vector store about {config['topic_name']}. This is the primary tool you should use.",
             func=use_rag_tool
         ),
         Tool(
             name="WebSearchTool",
-            description=f"Use this tool to search the web for additional information about {config['topic']}, or if the question is outside the scope of the RAG tool",  
+            description=f"Use this tool to search the web for additional information about {config['topic_name']}, or if the question is outside the scope of the RAG tool",  
             func=use_serp_tool
         )
     ]
@@ -70,15 +72,14 @@ if __name__ == "__main__":
     # Define the system prompt
     SYSTEM_PROMPT = f"""
         You are an AI assistant with specialized knowledge of the following topics:
-        {config["topic"]}.
+        {config["topic_name"]}.
 
-        - If the user's question is relevant to these topics, call the RAGTool.
-        - If the question is outside these topics, or if you need additional external info,
-        call the WebSearchTool.
+        - Call the RAGTool if the user's question is within the scope as defined by: {config["topic_scope"]}.
+        - If the question is outside the topic and scope defined above, or if you need additional external information, call the WebSearchTool.
         - In most cases, you should use both tools, and weigh relevance of each tool's response.
-        - If the RAGTool provides a relevant answer, you should consider its response to be authoritative.
+        - If the RAGTool provides a relevant answer with sufficient detail and confidence, you should consider its response to be authoritative.
         - Provide accurate answers, preferring concise answers unless the user asks for more detail.
-        - provide your response in markdown format.
+        - Provide your response in markdown format.
     """
     
     print(SYSTEM_PROMPT)

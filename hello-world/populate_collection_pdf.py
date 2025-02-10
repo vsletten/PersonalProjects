@@ -1,12 +1,8 @@
 import logging
 import os
 from dotenv import load_dotenv
-from pdf2image import convert_from_path
 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
 # local imports
@@ -41,7 +37,7 @@ def process_pdf_files(pdf_dir, chroma_dir, chroma_collection):
         raise e
     
     # Vector embed and save the documents to the Chroma DB
-    vectordb.ingest_document(chroma_dir, chroma_collection, all_documents, config.CHUNK_SIZE, config.CHUNK_OVERLAP, config.BATCH_SIZE, config.SLEEP_SECONDS)
+    vectordb.ingest_documents(chroma_dir, chroma_collection, all_documents, config['CHUNK_SIZE'], config['CHUNK_OVERLAP'], config['BATCH_SIZE'], config['SLEEP_SECONDS'])
     logger.info(f"Ingested {len(all_documents)} documents into {chroma_collection}")
             
             
@@ -51,14 +47,14 @@ if __name__ == "__main__":
 
     # Read config
     config = config.read_config()
-    print(f"Ingesting documents for {config['topic']} into {config['chroma_collection']}")
+    print(f"Ingesting documents for {config['topic_name']} into {config['chroma_collection']}")
     print(f"Source docs: {config['pdf_base_dir']}")
     print(f"Chroma DB: {config['chroma_base_dir']}")
     logging.basicConfig(level=config['LOG_LEVEL'])
     logger = logging.getLogger(__name__)
 
     # Ingest documents
-    pdf_dir = os.path.join(config['pdf_base_dir'], config['chroma_collection'])
+    pdf_dir = os.path.join(config['pdf_base_dir'], config['chroma_collection'], "unprocessed")
     chroma_dir = os.path.join(config['chroma_base_dir'], config['chroma_collection'])
     process_pdf_files(pdf_dir, chroma_dir, config['chroma_collection'])
 

@@ -6,8 +6,16 @@ from dotenv import load_dotenv
 
 # local imports
 import config
+import vectordb
 
-def load_html_content(dir_path):
+# Load the environment variables
+load_dotenv()
+config = config.read_config()
+
+# Initialize the OpenAI client
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+def extract_text_from_html(dir_path):
     """
     Reads and concatenates all HTML files in the given directory.
     """
@@ -51,10 +59,9 @@ def process_websites(source_dir, chroma_base_dir, chroma_collection):
         current_dir_path = os.path.join(source_dir, current_dir)
         if (os.path.isdir(current_dir_path)):
             print(f"Processing website: {current_dir}")
-            text = load_html_content(current_dir_path)
+            text = extract_text_from_html(current_dir_path)
             if text:
                 full_text += text
-                print(f"Stored {current_dir} in Chroma DB")
             else:
                 print(f"Skipping {current_dir} because it has no text")
         else:
@@ -66,8 +73,6 @@ def process_websites(source_dir, chroma_base_dir, chroma_collection):
 
 
 def main():
-    load_dotenv()
-    config = config.read_config()
     process_websites(config["html_base_dir"], config["chroma_base_dir"], config["chroma_collection"])
     print("Processing complete")
 
