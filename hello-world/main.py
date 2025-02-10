@@ -85,7 +85,7 @@ if __name__ == "__main__":
     print(SYSTEM_PROMPT)
 
     # Initialize the agent
-    agent_chain = initialize_agent(
+    agent_executor = initialize_agent(
         tools,
         llm,
         agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
@@ -96,18 +96,25 @@ if __name__ == "__main__":
     # Initialize the Streamlit app
     st.title("Anthropic Claude Q&A Agent (RAG + Web Search)")
 
+    # Initialize the session state
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
         
+    # Get the user's input
     user_input = st.text_input("Ask a question:")
 
+    # Send the user's input to the agent and get the response, add both to the session state
     if st.button("Send") and user_input.strip():
         st.session_state["messages"].append({"User": user_input})
-        response = agent_chain.run(user_input)
+        response = agent_executor.invoke({"input": user_input})
         st.session_state["messages"].append({"Agent": response})
         
+    # Redraw the UI with all the messages in the session state
     for message in st.session_state["messages"]:
-        role, content = list(message.items())[0]  # Extract the first key-value pair
+        # make a list from the keys dictionary view object and extract the first (only) element
+        role = list(message.keys())[0]
+        # make a list from the values dictionary view object and extract the first (only) element
+        content = list(message.values())[0]
         if role == "User":
             st.markdown(f"**You:** {content}")
         else:
