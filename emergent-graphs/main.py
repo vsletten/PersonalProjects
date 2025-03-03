@@ -120,6 +120,54 @@ def answer_agent(topic, prompt, previous_response=""):
         logging.error(traceback.format_exc())
         return None
 
+def parse_json_from_response(response_text):
+    # Remove thinking sections
+    clean_text = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL).strip()
+    json_match = re.search(r'```json(.*?)```', clean_text, re.DOTALL)
+    if not json_match:
+        raise ValueError("JSON block not found in response.")
+    json_str = json_match.group(1).strip()
+    if not json_str:
+        raise ValueError("Extracted JSON is empty.")
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON decode error: {e}")
+
+def match_existing_entity(entity, graph_db, embedder, concept_collection, threshold):
+    entity_lower = entity.lower()
+    # Direct match
+    for node in graph_db.nodes():
+        if entity_lower == node.lower():
+            return node
+    # Acronym matching
+    acronym_match = re.search(r'(.*?)\s*\(([A-Z]{2,})\)', entity)
+    if acronym_match:
+        full_form = acronym_match.group(1).strip().lower()
+        acronym = acronym_match.group(2).lower()
+        for node in graph_db.nodes():
+            node_lower = node.lower()
+            if acronym == node_lower or full_form == node_lower:
+                return node
+            node_match = re.search(r'(.*?)\s*\(([A-Z]{2,})\)', node)
+            if node_match:
+                if acronym == node_match.group(2).lower() or full_form == node_match.group(1).strip().lower():
+                    return node
+    # Vector similarity match (as a last resort)
+    try:
+        vector = embedder.encode(entity_lower).tolist()
+        results = concept_collection.query(query_embeddings=[vector], n_results=1)
+        if results.get("distances") and results["distances"][0]:
+            distance = results["distances"][0][0]
+            if distance < threshold and results["metadatas"][0]:
+                similar_entity = results["metadatas"][0][0].get("entity")
+                for node in graph_db.nodes():
+                    if node.lower() == similar_entity:
+                        return node
+    except Exception:
+        pass
+    return None
+
 def extract_agent(answer_text, graph_db, concept_collection, concept_similarity_threshold, max_graph_nodes, topic=None):
     """Extract entities and relationships from text and add to graph"""
     try:
