@@ -14,16 +14,23 @@ class Config:
     # MS Graph API Base URL
     MS_GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0"
     
-    # OAuth Scopes for Microsoft Graph API
+    # OAuth Scopes for Microsoft Graph API - Updated with more comprehensive scopes
     MS_GRAPH_SCOPES = [
         "Mail.ReadWrite",
+        "Mail.ReadWrite.Shared",
         "Mail.Send",
+        "Mail.Send.Shared",
+        "MailboxSettings.Read",
+        "User.Read",
         "offline_access"
     ]
     
     # Flask Configuration
     SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key-change-in-production")
     SESSION_TYPE = os.getenv("SESSION_TYPE", "filesystem")
+    SESSION_FILE_DIR = os.getenv("SESSION_FILE_DIR", "flask_session")
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = True
     
     # Cache settings
     CACHE_TIMEOUT = int(os.getenv("CACHE_TIMEOUT", "300"))  # 5 minutes
