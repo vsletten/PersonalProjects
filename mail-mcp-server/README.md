@@ -227,4 +227,131 @@ To send the message immediately, use the `/api/sendMail` endpoint with:
    - Make sure `offline_access` permission is included
    - Check session configuration in Flask
 
-4. **404 Errors on
+4. **404 Errors on API Endpoints**:
+   - Verify URL path matches the blueprint registration
+   - Check if the Flask server is running on the expected port
+   - Ensure the route handler is correctly implemented
+
+5. **Permission Denied Errors**:
+   - Review the permissions granted in Azure AD
+   - Make sure admin consent has been provided if required
+   - Check scope formatting in oauth.py
+
+### Debugging Tips
+
+1. **Enable Debug Logging**:
+   - Set `LOG_LEVEL=DEBUG` in your .env file
+   - Check console output for detailed request/response logs
+
+2. **Use the Test Script**:
+   - Run `test_graph_api.py` to verify your Azure configuration independently
+   - Helps isolate whether issues are with Azure configuration or your application
+
+3. **Check Token Information**:
+   - Visit `/auth/token-info` endpoint after authentication
+   - Verify scopes and expiration time
+
+4. **Browser Developer Tools**:
+   - Monitor network requests to identify where issues occur
+   - Check for CORS errors or failed network requests
+
+5. **Microsoft Graph Explorer**:
+   - Use [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) to test API requests
+   - Helps determine if issues are specific to your application or API-wide
+
+## Advanced Usage
+
+### Filtering Messages
+
+The `/api/messages` endpoint supports OData filtering:
+
+```
+GET /api/messages?filter=isRead eq false
+```
+
+Common filter examples:
+- `isRead eq false` - Unread messages only
+- `importance eq 'high'` - High importance messages
+- `receivedDateTime ge 2023-01-01T00:00:00Z` - Messages received after January 1, 2023
+
+### Pagination
+
+To handle large mailboxes, use the skip and limit parameters:
+
+```
+GET /api/messages?skip=0&limit=10
+```
+
+Then get the next page:
+
+```
+GET /api/messages?skip=10&limit=10
+```
+
+### Selecting Specific Fields
+
+To optimize response size, specify only the fields you need:
+
+```
+GET /api/messages?select=subject,from,receivedDateTime
+```
+
+### Search
+
+Full-text search across messages:
+
+```
+GET /api/messages?search="meeting agenda"
+```
+
+## Rate Limiting
+
+Microsoft Graph API has rate limits that apply to your application. Consider implementing:
+
+1. Request throttling
+2. Exponential backoff for retries
+3. Caching frequently accessed data
+
+See [Microsoft's documentation on throttling](https://docs.microsoft.com/en-us/graph/throttling) for details.
+
+## Security Considerations
+
+1. **Store Secrets Securely**:
+   - Never commit .env files to source control
+   - Use a secrets manager in production
+
+2. **HTTPS in Production**:
+   - Always use HTTPS for production deployments
+   - Configure Flask with a proper WSGI server like Gunicorn or uWSGI
+
+3. **Minimize Token Exposure**:
+   - Don't expose tokens to client-side code
+   - Store tokens in server-side sessions only
+
+4. **Authorization**:
+   - Implement proper user authorization if multiple users access the application
+   - Consider using a proper authentication middleware
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Microsoft Graph API documentation
+- Flask documentation
+- Contributors to the MSAL Python library
+
+## Support
+
+For questions or issues, please open an issue on the GitHub repository or contact the maintainers directly.
