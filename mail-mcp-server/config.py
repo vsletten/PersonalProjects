@@ -14,7 +14,9 @@ class Config:
     # MS Graph API Base URL
     MS_GRAPH_API_ENDPOINT = "https://graph.microsoft.com/v1.0"
     
-    # OAuth Scopes for Microsoft Graph API - Updated with more comprehensive scopes
+    # OAuth Scopes for Microsoft Graph API
+    # Note: These are the internal names used in config, but actual OAuth requests should use
+    # the full URI format as specified in oauth.py (e.g., "https://graph.microsoft.com/Mail.ReadWrite")
     MS_GRAPH_SCOPES = [
         "Mail.ReadWrite",
         "Mail.ReadWrite.Shared",
@@ -37,3 +39,4 @@ class Config:
     
     # Logging
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
