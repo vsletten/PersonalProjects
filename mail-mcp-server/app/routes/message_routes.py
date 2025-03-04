@@ -25,8 +25,8 @@ def list_messages():
         
         # Get messages
         messages = graph_service.list_messages(
-            skip=None,
-            limit=None,
+            skip=skip,
+            limit=limit,
             filter_query=filter_query,
             select_query=select_query,
             orderby=orderby,
