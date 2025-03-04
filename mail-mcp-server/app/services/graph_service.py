@@ -158,6 +158,8 @@ class GraphService:
             
         if search:
             params['$search'] = search
+            
+        logger.debug(f"Final Params: {params}")
         
         # Make request to Messages endpoint as shown in the documentation
         response = self._make_request('GET', '/me/messages', params=params)
